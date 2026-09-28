@@ -11,7 +11,7 @@ bool meteo::validInput(double x, temp y){
     return true;
 }
 double meteo::toCelsius(double x, temp y){
-    double res = 0;
+    double res = x;
 
     if(!validInput(x,y)){
         throw std::invalid_argument("[SYSTEM] Too low temperature");
@@ -32,7 +32,7 @@ double meteo::toCelsius(double x, temp y){
 }
 
 double meteo::toKelvin(double x, temp y){
-    double res = 0;
+    double res = x;
 
     if(!validInput(x,y)){
         throw std::invalid_argument("[SYSTEM] Too low temperature");
@@ -54,7 +54,7 @@ double meteo::toKelvin(double x, temp y){
 }
 
 double meteo::toFahrenheit(double x, temp y){
-    double res = 0;
+    double res = x;
 
     if(!validInput(x,y)){
         throw std::invalid_argument("[SYSTEM] Too low temperature");
