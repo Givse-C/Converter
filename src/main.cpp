@@ -7,14 +7,16 @@
 #include "weather.hpp"
 #include "weight.hpp"
 #include "distances.hpp"
+#include "history.hpp"
 
 //-------------handlers------------------
-void meteo_handler();
-void weight_handler();
-void dist_handler();
+void meteo_handler(queue<std::string>& history);
+void weight_handler(queue<std::string>& history);
+void dist_handler(queue<std::string>& history);
+void history_handler(queue<std::string>& history);
 //-------------in words------------------
-std::string numbersToWords(long long n);
 
+std::string numbersToWords(long long n);
 
 std::string lower(std::string& s){
     char c;
@@ -29,8 +31,12 @@ std::string lower(std::string& s){
 }
 
 int main(){
+
+    queue<std::string> my_history;
+
     std::cout<<"[SYSTEM] Welcome to unit conveter module "<<std::endl;
     std::cout<<"Choose the convertion [weather], [weight], [distance]"<<std::endl;
+    std::cout<<"View hystory"<<std::endl;
     std::string input = "[";
 
     std::string answer;
@@ -43,15 +49,19 @@ int main(){
 
     if(answer.find("weat") != std::string::npos){
         std::cout<<"Weather confirmed"<<std::endl;
-        meteo_handler();  
+        meteo_handler(my_history);  
     }
     else if(answer.find("weig") != std::string::npos){
         std::cout<<"Weight confirmed"<<std::endl;
-        weight_handler();
+        weight_handler(my_history);
     }
     else if(answer.find("dist") != std::string::npos){
         std::cout<<"Distance confirmed"<<std::endl;
-        dist_handler();
+        dist_handler(my_history);
+    }
+    else if(answer.find("hys") != std::string::npos){
+        std::cout<<"Hystory"<<std::endl;
+        history_handler(my_history);
     }
     else{
         throw std::invalid_argument("[CRITICAL] invalid input");
@@ -82,7 +92,7 @@ std::string numbersToWords(long long n){
             n %= 1000000000;
         }
         if(n >= 1000000){
-            res += numbersToWords(n / 1000000000) + " milion ";
+            res += numbersToWords(n / 1000000) + " milion ";
             n %= 1000000;
         }
         if( n >= 1000){
@@ -109,8 +119,7 @@ std::string numbersToWords(long long n){
 //************************************************************* */
 //HANDLERS
 
-
-void meteo_handler(){
+void meteo_handler(queue<std::string>& history){
     meteo conv;
     char c_from, c_to;
     double value, res = 0;
@@ -150,17 +159,21 @@ void meteo_handler(){
             return;
         }
 
-        // 5. Output finale (Fondamentale!)
+        // 5. Output finale 
         std::cout << "------------------------------------" << std::endl;
         std::cout << "[SYSTEM] RESULTS: " << res << std::endl;
         std::cout << "------------------------------------" << std::endl;
+
+        // 6. Salvataggio
+        std::string str = std::string(1, c_to);
+        history.add(res, str);
 
     } catch (const std::invalid_argument& e) {
         std::cerr << "[ALERT] Invalid argument" << e.what() << std::endl;
     }
 }
 
-void weight_handler() {
+void weight_handler(queue<std::string>& history) {
     weight conv;
     char c_from, c_to;
     double value, res = 0;
@@ -216,13 +229,17 @@ void weight_handler() {
         std::cout << "[WEIGHT] RESULTS: " << res << " " << c_to << std::endl;
         std::cout << "------------------------------------" << std::endl;
 
+        // 6. Salvataggio
+        std::string str = std::string(1, c_to);
+        history.add(res, str);
+
     } catch (const std::invalid_argument& e) {
         // Qui catturiamo l'eccezione se il peso è negativo
         std::cerr << "[WEIGHT SYSTEM] Invalid argument" << e.what() << std::endl;
     }
 }
 
-void dist_handler() {
+void dist_handler(queue<std::string>& history) {
     dist conv;
     char c_from, c_to;
     double value, res = 0;
@@ -304,8 +321,49 @@ void dist_handler() {
         std::cout << "Value in characters: " << numbersToWords(res) << c_to <<std::endl;
         std::cout << "------------------------------------------" << std::endl;
 
+        // 6. Salvataggio
+        std::string str = std::string(1, c_to);
+        history.add(res, str);
+
     } catch (const std::invalid_argument& e) {
         // Cattura distanze negative (impossibili nello spazio euclideo)
         std::cerr << "[ALERT] invalid argument " << e.what() << std::endl;
     }
+}
+
+void history_handler(queue<std::string>& history){
+    std::cout<<"Clear hystory [1]"<<std::endl;
+    std::cout<<"Print hystory [2]"<<std::endl;
+    std::cout<<"Print last conversion [3]"<<std::endl;
+    std::cout<<"Save to file [4]"<<std::endl;
+
+    int answer;
+    std::cin>>answer;
+
+    if(answer == 1){
+        history.clear();
+        std::cout<<"[MEM] memory successfully cleared"<<std::endl;
+    }
+    else if(answer == 2){
+        history.print();
+    }
+    else if(answer == 3){
+        auto[valore, unita] = history.get_top();
+        if(valore != -1.0){
+            std::cout<<"Last conversion: "<<valore<<" "<<unita<<std::endl;
+        }
+    }
+    else if(answer == 4){
+        std::string text;
+        std::cout<< "[MEM] Enter filename to save the file: ";
+        std::cin>> text;
+
+        try{
+            history.save_to_file(text);
+        }catch(const std::exception& e){
+            std::cerr<<" [ERROR] could not save to hystory!"<<std::endl;
+        }
+
+    }
+    
 }
